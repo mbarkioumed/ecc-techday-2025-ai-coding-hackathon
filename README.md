@@ -1,7 +1,7 @@
 # 🎮 ECC Tech Day 2025 – AI & Coding Hackathon
 
 **Hackathon "Duel Stratégique : IA vs Humain"**  
-📅 24 mars 2025 – Organisé par les pôles *Coding & Intelligence Artificielle* de l’École Centrale Casablanca
+📅 12 mars 2025 – Organisé par les pôles *Coding & Intelligence Artificielle* de l’École Centrale Casablanca
 
 ---
 
