@@ -44,6 +44,25 @@ class SoukKingGame:
         self.client_cards = []
         self.winner = None
         
+        # Rules text
+        self.rules = [
+            "Welcome to Souk King!",
+            "You are a merchant in a bustling marketplace. Your goal is to make more money than the AI merchant.",
+            "",
+            "Game Rules:",
+            "1. Each round, you bid on a product against the AI.",
+            "2. The highest bidder gets to sell the product that day.",
+            "3. Each day has special events that affect your profits.",
+            "4. Choose clients wisely - each offers a different price!",
+            "5. After 5 rounds, whoever has the most money wins.",
+            "",
+            "Tips:",
+            "• Bidding too high reduces potential profit and attracts fewer clients.",
+            "• Watch out for 'Charity Days' when you donate 20% of your money.",
+            "• On 'High Demand Days' your selling price doubles!",
+            "• On 'Low Demand Days' your selling price is halved.",
+        ]
+        
         # UI elements
         self.create_ui()
     
@@ -55,6 +74,16 @@ class SoukKingGame:
             200,
             60,
             "Start Game",
+            font=self.fonts['heading_font']
+        )
+        
+        # Rules screen button
+        self.understood_button = Button(
+            SCREEN_WIDTH // 2 - 100,
+            SCREEN_HEIGHT - 100,
+            200,
+            60,
+            "Understood!",
             font=self.fonts['heading_font']
         )
         
@@ -790,10 +819,43 @@ class SoukKingGame:
         transition_surface.fill((0, 0, 0, alpha))
         self.screen.blit(transition_surface, (0, 0))
     
+    def draw_rules(self):
+        # Draw background
+        self.screen.fill(BACKGROUND)
+        
+        # Draw title
+        title = self.fonts['title_font'].render("Game Rules", True, TEXT_COLOR)
+        title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 60))
+        self.screen.blit(title, title_rect)
+        
+        # Draw rules text
+        y_offset = 120
+        line_height = 30
+        
+        for rule in self.rules:
+            if rule == "":  # Empty line for spacing
+                y_offset += line_height
+                continue
+                
+            # Use heading font for section titles
+            if rule in ["Game Rules:", "Tips:"]:
+                text = self.fonts['heading_font'].render(rule, True, HIGHLIGHT_COLOR)
+            else:
+                text = self.fonts['regular_font'].render(rule, True, TEXT_COLOR)
+                
+            text_rect = text.get_rect(midleft=(SCREEN_WIDTH // 6, y_offset))
+            self.screen.blit(text, text_rect)
+            y_offset += line_height
+        
+        # Draw understood button
+        self.understood_button.draw(self.screen)
+    
     def draw(self):
         # Draw current game state
         if self.game_state == GameState.MENU:
             self.draw_menu()
+        elif self.game_state == GameState.RULES:
+            self.draw_rules()
         elif self.game_state == GameState.BIDDING:
             self.draw_bidding()
         elif self.game_state == GameState.EVENT:
@@ -812,6 +874,8 @@ class SoukKingGame:
         # Update UI elements based on current state
         if self.game_state == GameState.MENU:
             self.start_button.update(mouse_pos)
+        elif self.game_state == GameState.RULES:
+            self.understood_button.update(mouse_pos)
         elif self.game_state == GameState.BIDDING:
             self.bid_input.update()
             self.place_bid_button.update(mouse_pos)
@@ -838,7 +902,10 @@ class SoukKingGame:
         
         if self.game_state == GameState.MENU:
             if self.start_button.is_clicked(event):
-                self.next_round()
+                self.transition_to_state(GameState.RULES)  # Go to rules instead of next_round
+        elif self.game_state == GameState.RULES:
+            if self.understood_button.is_clicked(event):
+                self.next_round()  # Now proceed to first round after rules
         elif self.game_state == GameState.BIDDING:
             # Handle bid input
             bid_result = self.bid_input.handle_event(event)
