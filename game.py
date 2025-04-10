@@ -24,6 +24,8 @@ class SoukKingGame:
         self.ai_money = 300
         self.event_weights = [0.15, 0.55, 0.15, 0.15]
         self.ai_memory = []
+        self.start_time = 0
+        self.showed_view = False
         self.selected_products = random.sample(products, 5)
         self.current_round = 0
         self.current_product = None
@@ -34,7 +36,7 @@ class SoukKingGame:
         self.user_price = 0
         self.ai_price = 0
         self.chosen_client = None
-        self.transition_animation = Animation(1.0)
+        self.transition_animation = Animation(0.1)
         self.money_animation = Animation(1.0)
         self.old_user_money = self.user_money
         self.old_ai_money = self.ai_money
@@ -130,7 +132,7 @@ class SoukKingGame:
         self.transition_to_state(GameState.BIDDING)
     
     def transition_to_state(self, new_state):
-        self.transition_animation.start()
+        #self.transition_animation.start()
         self.game_state = new_state
         
         # If transitioning from menu to game, restore original window size
@@ -501,97 +503,137 @@ class SoukKingGame:
         round_text = self.fonts['heading_font'].render(f"Round {self.current_round} of 5", True, TEXT_COLOR)
         self.screen.blit(round_text, (20, 20))
         
-        # Animate money changes
-        if self.money_animation.running:
-            progress = self.money_animation.update()
+        if pygame.time.get_ticks() - self.start_time < 2000:
+            # Display user and AI logos
+            user_logo_rect = self.images['human_img'].get_rect(center=(SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2))
+            ai_logo_rect = self.images['robot_img'].get_rect(center=(3 * SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2))
+            self.screen.blit(self.images['human_img'], user_logo_rect)
+            self.screen.blit(self.images['robot_img'], ai_logo_rect)
+            
+            # Display user bid
+            user_bid_text = self.fonts['title_font'].render(f"Your Bid: ${self.user_price:.2f}", True, PLAYER_COLOR)
+            user_bid_rect = user_bid_text.get_rect(center=(SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 100))
+            self.screen.blit(user_bid_text, user_bid_rect)
+            
+            # Display AI bid
+            ai_bid_text = self.fonts['title_font'].render(f"AI Bid: ${self.ai_price:.2f}", True, AI_COLOR)
+            ai_bid_rect = ai_bid_text.get_rect(center=(3 * SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 100))
+            self.screen.blit(ai_bid_text, ai_bid_rect)
+            
+            # Display who won the item
             if self.bid_result == "player":
-                display_money = self.old_user_money - (progress * (self.old_user_money - self.user_money))
-                player_money = self.fonts['regular_font'].render(f"Your Money: ${display_money:.2f}", True, PLAYER_COLOR)
+                winner_text = self.fonts['title_font'].render("You won the item!", True, PLAYER_COLOR)
+            else:
+                winner_text = self.fonts['title_font'].render("AI won the item!", True, AI_COLOR)
+            winner_rect = winner_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+            self.screen.blit(winner_text, winner_rect)
+        
+        if pygame.time.get_ticks() - self.start_time >= 2000:
+            # Animate money changes
+            if self.money_animation.running:
+                progress = self.money_animation.update()
+                if self.bid_result == "player":
+                    display_money = self.old_user_money - (progress * (self.old_user_money - self.user_money))
+                    player_money = self.fonts['regular_font'].render(f"Your Money: ${display_money:.2f}", True, PLAYER_COLOR)
+                else:
+                    player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+                
+                if self.bid_result == "ai":
+                    display_ai_money = self.old_ai_money - (progress * (self.old_ai_money - self.ai_money))
+                    ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
+                else:
+                    ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
             else:
                 player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
-            
-            if self.bid_result == "ai":
-                display_ai_money = self.old_ai_money - (progress * (self.old_ai_money - self.ai_money))
-                ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
-            else:
                 ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
-        else:
-            player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
-            ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
-        
-        self.screen.blit(player_money, (20, 70))
-        self.screen.blit(ai_money, (SCREEN_WIDTH - 250, 70))
-        
-        # Draw bid result left-aligned instead of centered - MOVED DOWN BY 10 PIXELS
-        if self.bid_result == "player":
-            result_text = self.fonts['heading_font'].render(f"You bought the {self.current_product['name']} for ${self.user_price:.2f}", True, PLAYER_COLOR)
-            winner_img = self.images['human_img']
-        else:
-            result_text = self.fonts['heading_font'].render(f"AI bought the {self.current_product['name']} for ${self.ai_price:.2f}", True, AI_COLOR)
-            winner_img = self.images['robot_img']
-
-        # Position image and text at the left side of screen - MOVED DOWN FROM 130 TO 140
-        icon_rect = winner_img.get_rect(midleft=(50, 140))
-        result_rect = result_text.get_rect(midleft=(icon_rect.right + 10, 140))
-
-        # Draw them side by side
-        self.screen.blit(winner_img, icon_rect)
-        self.screen.blit(result_text, result_rect)
-        
-        # Draw event panel with background - MAKE IT TALLER to fit both texts
-        event_panel = pygame.Rect(50, 180, SCREEN_WIDTH - 100, 80)  # Changed height from 50 to 80
-        pygame.draw.rect(self.screen, EVENT_COLOR, event_panel, border_radius=10)
-
-        # Draw event info on the panel - name at the top
-        event_text = self.fonts['regular_font'].render(f"Today is {self.selected_event['name']}", True, TEXT_COLOR)
-        event_rect = event_text.get_rect(center=(event_panel.centerx, event_panel.y + 20))  # Position near top
-        self.screen.blit(event_text, event_rect)
-
-        # Draw event description inside the panel
-        event_desc = self.fonts['small_font'].render(self.selected_event['description'], True, TEXT_COLOR)
-        event_desc_rect = event_desc.get_rect(center=(event_panel.centerx, event_panel.y + 55))  # Position below name
-        self.screen.blit(event_desc, event_desc_rect)
-
-        # Draw client selection instructions after the event panel
-        if self.bid_result == "player":
-            # For player's turn
-            instruction = self.fonts['heading_font'].render("Choose a client to sell to:", True, TEXT_COLOR)
-            instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
-            self.screen.blit(instruction, instruction_rect)
             
-            # Draw client cards - no need to draw event description again
-            for card in self.client_cards:
-                card.draw(self.screen)
-        else:
-            # If AI's turn, show AI's choice
-            if self.chosen_client:
-                # Now draw "AI chose this client" text AFTER the event section
-                instruction = self.fonts['heading_font'].render("AI chose this client:", True, TEXT_COLOR)
-                instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
-                self.screen.blit(instruction, instruction_rect)
-                
-                # Draw client cards with AI's choice highlighted
-                for i, card in enumerate(self.client_cards):
-                    if self.chosen_client == card.client:
-                        card.selected = True
-                    card.draw(self.screen)
-                
-                # Draw sale info
-                sale_text = self.fonts['heading_font'].render(f"Sale price: ${self.given_price:.2f}", True, AI_COLOR)
-                sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
-                self.screen.blit(sale_text, sale_rect)
-                
-                # Draw continue button
-                self.continue_button.draw(self.screen)
+            self.screen.blit(player_money, (20, 70))
+            self.screen.blit(ai_money, (SCREEN_WIDTH - 250, 70))
+            
+            # Draw bid result left-aligned instead of centered - MOVED DOWN BY 10 PIXELS
+            if self.bid_result == "player":
+                result_text = self.fonts['heading_font'].render(f"You bought the {self.current_product['name']} for ${self.user_price:.2f}", True, PLAYER_COLOR)
+                winner_img = self.images['human_img']
             else:
-                # AI is still choosing
-                instruction = self.fonts['heading_font'].render("AI is choosing a client...", True, TEXT_COLOR)
+                result_text = self.fonts['heading_font'].render(f"AI bought the {self.current_product['name']} for ${self.ai_price:.2f}", True, AI_COLOR)
+                winner_img = self.images['robot_img']
+
+            # Position image and text at the left side of screen - MOVED DOWN FROM 130 TO 140
+            icon_rect = winner_img.get_rect(midleft=(50, 140))
+            result_rect = result_text.get_rect(midleft=(icon_rect.right + 10, 140))
+
+            # Draw them side by side
+            self.screen.blit(winner_img, icon_rect)
+            self.screen.blit(result_text, result_rect)
+            
+            # Determine event panel color based on the day type
+            if self.selected_event['name'] == "High demand day":
+                event_color = PLAYER_COLOR  # Match the Money text color
+            elif self.selected_event['name'] in ["Charity day", "Low demand day"]:
+                event_color = (255, 0, 0)  # Red
+            else:
+                event_color = (173, 216, 230)  # Baby blue
+
+            # Draw event panel with background - REDUCED WIDTH from SCREEN_WIDTH - 100 to 400
+            event_width = 600  # Narrower width
+            event_panel = pygame.Rect((SCREEN_WIDTH - event_width) // 2, 180, event_width, 80)
+            pygame.draw.rect(self.screen, event_color, event_panel, border_radius=10)
+
+            # Draw event info on the panel - name at the top
+            event_text = self.fonts['regular_font'].render(f"Today is {self.selected_event['name']}", True, TEXT_COLOR)
+            event_rect = event_text.get_rect(center=(event_panel.centerx, event_panel.y + 20))  # Position near top
+            self.screen.blit(event_text, event_rect)
+
+            # Draw event description inside the panel
+            event_desc = self.fonts['small_font'].render(self.selected_event['description'], True, TEXT_COLOR)
+            event_desc_rect = event_desc.get_rect(center=(event_panel.centerx, event_panel.y + 55))  # Position below name
+            self.screen.blit(event_desc, event_desc_rect)
+
+            # Draw client selection instructions after the event panel
+            if self.bid_result == "player":
+                # For player's turn
+                instruction = self.fonts['heading_font'].render("Choose a client to sell to:", True, TEXT_COLOR)
                 instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
                 self.screen.blit(instruction, instruction_rect)
                 
-                # Draw client cards
+                # Draw client cards - no need to draw event description again
                 for card in self.client_cards:
                     card.draw(self.screen)
+            else:
+                # If AI's turn, show AI's choice
+                if self.chosen_client:
+                    if pygame.time.get_ticks() - self.start_time >= 4000:
+                        # Now draw "AI chose this client" text AFTER the event section
+                        instruction = self.fonts['heading_font'].render("AI chose this client:", True, TEXT_COLOR)
+                        instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
+                        self.screen.blit(instruction, instruction_rect)
+                    if pygame.time.get_ticks() - self.start_time < 4000:
+                        # Draw client cards with AI's choice highlighted
+                        for i, card in enumerate(self.client_cards):
+                            card.draw(self.screen)
+                    else:
+                        for i, card in enumerate(self.client_cards):
+                            if self.chosen_client == card.client:
+                                card.selected = True
+                                card.draw(self.screen)
+                        
+                    
+                    if pygame.time.get_ticks() - self.start_time >= 4000:
+                        sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
+                        sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
+                        self.screen.blit(sale_text, sale_rect)
+                    
+                    # Draw continue button
+                    self.continue_button.draw(self.screen)
+                else:
+                    # AI is still choosing
+                    instruction = self.fonts['heading_font'].render("AI is choosing a client...", True, TEXT_COLOR)
+                    instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
+                    self.screen.blit(instruction, instruction_rect)
+                    
+                    # Draw client cards
+                    for card in self.client_cards:
+                        card.draw(self.screen)
     
     def draw_results(self):
         # Draw background
@@ -743,7 +785,11 @@ class SoukKingGame:
         elif self.game_state == GameState.BIDDING:
             self.bid_input.update()
             self.place_bid_button.update(mouse_pos)
+            self.showed_view = False
         elif self.game_state == GameState.EVENT:
+            if self.showed_view == False:
+                self.start_time = pygame.time.get_ticks()
+                self.showed_view = True
             if self.bid_result == "player":
                 # Update client cards
                 for card in self.client_cards:

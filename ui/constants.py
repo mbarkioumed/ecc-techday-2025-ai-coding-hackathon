@@ -26,10 +26,11 @@ PANEL_COLOR = (247, 236, 195)
 class GameState:
     MENU = 0
     BIDDING = 1
-    EVENT = 2
-    CLIENTS = 3
-    RESULTS = 4
-    GAME_OVER = 5
+    BID_RESULT = 2  # Add the new state
+    EVENT = 3       # Update the following states
+    CLIENTS = 4
+    RESULTS = 5
+    GAME_OVER = 6
 
 # Initialize pygame fonts
 def init_fonts():

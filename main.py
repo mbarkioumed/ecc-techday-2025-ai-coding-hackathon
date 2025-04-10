@@ -1,8 +1,9 @@
 import pygame
 import sys
 import math
+import time
 from pygame.locals import *
-from ui.constants import SCREEN_WIDTH, SCREEN_HEIGHT, init_fonts
+from ui.constants import SCREEN_WIDTH, SCREEN_HEIGHT, init_fonts, GameState
 from game import SoukKingGame
 
 def load_game_images():
@@ -65,6 +66,8 @@ def main():
     # Game loop
     clock = pygame.time.Clock()
     running = True
+    game.start_time = pygame.time.get_ticks()
+    game.showed_view = False
     
     while running:
         dt = clock.tick(60) / 1000.0  # Time since last frame in seconds
