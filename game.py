@@ -602,23 +602,53 @@ class SoukKingGame:
             else:
                 # If AI's turn, show AI's choice
                 if self.chosen_client:
-                    if pygame.time.get_ticks() - self.start_time >= 4000:
-                        # Now draw "AI chose this client" text AFTER the event section
-                        instruction = self.fonts['heading_font'].render("AI chose this client:", True, TEXT_COLOR)
-                        instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
-                        self.screen.blit(instruction, instruction_rect)
                     if pygame.time.get_ticks() - self.start_time < 4000:
                         # Draw client cards with AI's choice highlighted
                         for i, card in enumerate(self.client_cards):
                             card.draw(self.screen)
-                    else:
+                    elif pygame.time.get_ticks() - self.start_time < 5000:
+                        # Transition phase: gradually highlight the AI's chosen client and fade out others
+                        fade_progress = (pygame.time.get_ticks() - self.start_time - 4000) / 800  # 0 to 1 over 2 seconds
+                        
+                        # Draw all client cards
+                        for card in self.client_cards:
+                            # Mark the chosen card as selected
+                            card.selected = (card.client == self.chosen_client)
+                            # Draw the card
+                            card.draw(self.screen)
+                        
+                        # Create fade effect for non-selected cards
+                        for card in self.client_cards:
+                            if card.client != self.chosen_client:
+                                # Create a fading overlay on non-selected cards
+                                card_rect = pygame.Rect(
+                                    card.rect.x,
+                                    card.rect.y + card.y_offset,
+                                    card.rect.width,
+                                    card.rect.height
+                                )
+                                overlay = pygame.Surface((card_rect.width, card_rect.height), pygame.SRCALPHA)
+                                overlay_alpha = int(180 * fade_progress)  # Gradually increase opacity to 70%
+                                overlay.fill((BACKGROUND[0], BACKGROUND[1], BACKGROUND[2], overlay_alpha))
+                                self.screen.blit(overlay, card_rect)
+                        
+                        # Show the sale price after a short delay
+                        if pygame.time.get_ticks() - self.start_time >= 5000:
+                            sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
+                            sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
+                            self.screen.blit(sale_text, sale_rect)
+                    elif pygame.time.get_ticks() - self.start_time >= 5000:
+                        # Now draw "AI chose this client" text AFTER the event section
+                        instruction = self.fonts['heading_font'].render("AI chose this client:", True, TEXT_COLOR)
+                        instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
+                        self.screen.blit(instruction, instruction_rect)
                         for i, card in enumerate(self.client_cards):
                             if self.chosen_client == card.client:
                                 card.selected = True
                                 card.draw(self.screen)
                         
                     
-                    if pygame.time.get_ticks() - self.start_time >= 4000:
+                    if pygame.time.get_ticks() - self.start_time >= 5000:
                         sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
                         sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
                         self.screen.blit(sale_text, sale_rect)
