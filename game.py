@@ -1036,7 +1036,7 @@ class SoukKingGame:
                 pygame.draw.circle(self.screen, HIGHLIGHT_COLOR, circle_pos, circle_radius + 3, 2)
             
             # Draw circle border
-            pygame.draw.circle(self.screen, TEXT_COLOR, circle_pos, circle_radius, 2)
+            pygame.draw.circle(self.screen, (211, 182, 156), circle_pos, circle_radius, 2)
             
             # If this round has a winner, draw the corresponding image
             if i < len(self.round_winners) and self.round_winners[i] is not None:
@@ -1052,7 +1052,7 @@ class SoukKingGame:
                     self.screen.blit(scaled_img, img_rect)
             else:
                 # If no winner yet, just show the round number
-                round_num = self.fonts['small_font'].render(str(i + 1), True, TEXT_COLOR)
+                round_num = self.fonts['small_font'].render(str(i + 1), True, (211, 182, 156))
                 round_rect = round_num.get_rect(center=circle_pos)
                 self.screen.blit(round_num, round_rect)
     
