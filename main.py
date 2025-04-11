@@ -22,6 +22,10 @@ def load_game_images():
         images['human_img'] = pygame.transform.scale(images['human_img'], (100, 100))
         images['robot_img'] = pygame.image.load("images/robot.png")
         images['robot_img'] = pygame.transform.scale(images['robot_img'], (100, 100))
+        
+        # Background image
+        bg_img = pygame.image.load("images/blurred_bg.jpg")
+        images['background_img'] = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
     except pygame.error:
         # Create placeholder images if files don't exist
         from ui.constants import BUTTON_COLOR, TEXT_COLOR, PLAYER_COLOR, AI_COLOR
@@ -30,7 +34,7 @@ def load_game_images():
         images['logo_img'].fill((0, 0, 0, 0))
         pygame.draw.rect(images['logo_img'], BUTTON_COLOR, (0, 0, 400, 200), border_radius=20)
         title_font = pygame.font.Font(None, 72)
-        logo_text = title_font.render("SOUK KING", True, TEXT_COLOR)
+        logo_text = title_font.render("SOUK KING", True, (0,0,0))
         images['logo_img'].blit(logo_text, (80, 70))
         
         images['human_img'] = pygame.Surface((100, 100), pygame.SRCALPHA)

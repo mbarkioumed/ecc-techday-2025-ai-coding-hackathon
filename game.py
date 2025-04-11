@@ -48,20 +48,21 @@ class SoukKingGame:
         # Rules text
         self.rules = [
             "Welcome to Souk King!",
-            "You are a merchant in a bustling marketplace. Your goal is to make more money than the AI merchant.",
+            "You are a merchant in a marketplace.",
+            "Your goal is to make more money than the AI merchant.",
             "",
             "Game Rules:",
-            "1. Each round, you bid on a product against the AI.",
-            "2. The highest bidder gets to sell the product that day.",
-            "3. Each day has special events that affect your profits.",
-            "4. Choose clients wisely - each offers a different price!",
-            "5. After 5 rounds, whoever has the most money wins.",
+            "  1. Each round, you bid on a product against the AI.",
+            "  2. The highest bidder gets to sell the product that day.",
+            "  3. Each day has special events that affect your profits.",
+            "  4. Choose clients wisely - each offers a different price!",
+            "  5. After 5 rounds, whoever has the most money wins.",
             "",
             "Tips:",
-            "• Bidding too high reduces potential profit and attracts fewer clients.",
-            "• Watch out for 'Charity Days' when you donate 20% of your money.",
-            "• On 'High Demand Days' your selling price doubles!",
-            "• On 'Low Demand Days' your selling price is halved.",
+            "  • Bidding too high reduces potential profit and attracts fewer clients.",
+            "  • Watch out for 'Charity Days' when you donate 20% of your money.",
+            "  • On 'High Demand Days' your selling price doubles!",
+            "  • On 'Low Demand Days' your selling price is halved.",
         ]
         
         # UI elements
@@ -481,16 +482,35 @@ class SoukKingGame:
     def draw_bidding(self):
         # Draw background
         self.screen.fill(BACKGROUND)
+        self.screen.blit(self.images['background_img'], (0, 0))
         
         # Draw round info
-        round_text = self.fonts['heading_font'].render(f"Round {self.current_round} of 5", True, TEXT_COLOR)
+        round_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            f"Round {self.current_round} of 5", 
+            TEXT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         self.screen.blit(round_text, (20, 20))
         
-        # Draw money
-        player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+        # Draw money with outlines
+        player_money = render_text_with_outline(
+            self.fonts['regular_font'],
+            f"Your Money: ${self.user_money:.2f}", 
+            PLAYER_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         self.screen.blit(player_money, (20, 70))
         
-        ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
+        ai_money = render_text_with_outline(
+            self.fonts['regular_font'],
+            f"AI Money: ${self.ai_money:.2f}", 
+            AI_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         self.screen.blit(ai_money, (SCREEN_WIDTH - 250, 70))
         
         # Draw product panel
@@ -525,7 +545,13 @@ class SoukKingGame:
             y_offset += 25
         
         # Draw bidding panel
-        bid_text = self.fonts['heading_font'].render("Place Your Bid", True, TEXT_COLOR)
+        bid_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            "Place Your Bid", 
+            TEXT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         bid_rect = bid_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 50))
         self.screen.blit(bid_text, bid_rect)
         
@@ -536,18 +562,37 @@ class SoukKingGame:
     def draw_event(self):
         # Draw background
         self.screen.fill(BACKGROUND)
+        self.screen.blit(self.images['background_img'], (0, 0))
         
         # Draw round info
-        round_text = self.fonts['heading_font'].render(f"Round {self.current_round} of 5", True, TEXT_COLOR)
+        round_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            f"Round {self.current_round} of 5", 
+            TEXT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         self.screen.blit(round_text, (20, 20))
         
-        # Money display logic with animations
+        # Money display logic with animations - add outlines
         if hasattr(self, 'ai_sale_animation') and self.ai_sale_animation.running:
             # If AI sale animation is running, use that for AI money display
             progress = self.ai_sale_animation.update()
             display_ai_money = self.old_ai_money + (progress * (self.final_ai_money - self.old_ai_money))
-            ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
-            player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+            ai_money = render_text_with_outline(
+                self.fonts['regular_font'],
+                f"AI Money: ${display_ai_money:.2f}", 
+                AI_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
+            player_money = render_text_with_outline(
+                self.fonts['regular_font'],
+                f"Your Money: ${self.user_money:.2f}", 
+                PLAYER_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
             
             # When sale animation is complete, update the actual AI money
             if not self.ai_sale_animation.running:
@@ -557,18 +602,54 @@ class SoukKingGame:
             progress = self.money_animation.update()
             if self.bid_result == "player":
                 display_money = self.old_user_money - (progress * (self.old_user_money - self.user_money))
-                player_money = self.fonts['regular_font'].render(f"Your Money: ${display_money:.2f}", True, PLAYER_COLOR)
+                player_money = render_text_with_outline(
+                    self.fonts['regular_font'],
+                    f"Your Money: ${display_money:.2f}", 
+                    PLAYER_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
             else:
-                player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+                player_money = render_text_with_outline(
+                    self.fonts['regular_font'],
+                    f"Your Money: ${self.user_money:.2f}", 
+                    PLAYER_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
             
             if self.bid_result == "ai":
                 display_ai_money = self.old_ai_money - (progress * (self.old_ai_money - self.ai_money))
-                ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
+                ai_money = render_text_with_outline(
+                    self.fonts['regular_font'],
+                    f"AI Money: ${display_ai_money:.2f}", 
+                    AI_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
             else:
-                ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
+                ai_money = render_text_with_outline(
+                    self.fonts['regular_font'],
+                    f"AI Money: ${self.ai_money:.2f}", 
+                    AI_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
         else:
-            player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
-            ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
+            player_money = render_text_with_outline(
+                self.fonts['regular_font'],
+                f"Your Money: ${self.user_money:.2f}", 
+                PLAYER_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
+            ai_money = render_text_with_outline(
+                self.fonts['regular_font'],
+                f"AI Money: ${self.ai_money:.2f}", 
+                AI_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
         
         # Always display money at the top
         self.screen.blit(player_money, (20, 70))
@@ -582,30 +663,66 @@ class SoukKingGame:
             self.screen.blit(self.images['robot_img'], ai_logo_rect)
             
             # Display user bid
-            user_bid_text = self.fonts['title_font'].render(f"Your Bid: ${self.user_price:.2f}", True, PLAYER_COLOR)
+            user_bid_text = render_text_with_outline(
+                self.fonts['title_font'],
+                f"Your Bid: ${self.user_price:.2f}", 
+                PLAYER_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
             user_bid_rect = user_bid_text.get_rect(center=(SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 100))
             self.screen.blit(user_bid_text, user_bid_rect)
             
             # Display AI bid
-            ai_bid_text = self.fonts['title_font'].render(f"AI Bid: ${self.ai_price:.2f}", True, AI_COLOR)
+            ai_bid_text = render_text_with_outline(
+                self.fonts['title_font'],
+                f"AI Bid: ${self.ai_price:.2f}", 
+                AI_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
             ai_bid_rect = ai_bid_text.get_rect(center=(3 * SCREEN_WIDTH // 4, SCREEN_HEIGHT // 2 + 100))
             self.screen.blit(ai_bid_text, ai_bid_rect)
             
             # Display who won the item
             if self.bid_result == "player":
-                winner_text = self.fonts['title_font'].render("You won the item!", True, PLAYER_COLOR)
+                winner_text = render_text_with_outline(
+                    self.fonts['title_font'],
+                    "You won the item!", 
+                    PLAYER_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
             else:
-                winner_text = self.fonts['title_font'].render("AI won the item!", True, AI_COLOR)
+                winner_text = render_text_with_outline(
+                    self.fonts['title_font'],
+                    "AI won the item!", 
+                    AI_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
             winner_rect = winner_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
             self.screen.blit(winner_text, winner_rect)
         
         if pygame.time.get_ticks() - self.start_time >= 2000:
             # Draw bid result left-aligned instead of centered - MOVED DOWN BY 10 PIXELS
             if self.bid_result == "player":
-                result_text = self.fonts['heading_font'].render(f"You bought the {self.current_product['name']} for ${self.user_price:.2f}", True, PLAYER_COLOR)
+                result_text = render_text_with_outline(
+                    self.fonts['heading_font'],
+                    f"You bought the {self.current_product['name']} for ${self.user_price:.2f}", 
+                    PLAYER_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
                 winner_img = self.images['human_img']
             else:
-                result_text = self.fonts['heading_font'].render(f"AI bought the {self.current_product['name']} for ${self.ai_price:.2f}", True, AI_COLOR)
+                result_text = render_text_with_outline(
+                    self.fonts['heading_font'],
+                    f"AI bought the {self.current_product['name']} for ${self.ai_price:.2f}", 
+                    AI_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
                 winner_img = self.images['robot_img']
 
             # Position image and text at the left side of screen - MOVED DOWN FROM 130 TO 140
@@ -642,7 +759,13 @@ class SoukKingGame:
             # Draw client selection instructions after the event panel
             if self.bid_result == "player":
                 # For player's turn
-                instruction = self.fonts['heading_font'].render("Choose a client to sell to:", True, TEXT_COLOR)
+                instruction = render_text_with_outline(
+                    self.fonts['heading_font'],
+                    "Choose a client to sell to:", 
+                    TEXT_COLOR,
+                    (255, 255, 255),  # white outline
+                    2  # outline thickness
+                )
                 instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
                 self.screen.blit(instruction, instruction_rect)
                 
@@ -683,7 +806,13 @@ class SoukKingGame:
                                 self.screen.blit(overlay, card_rect)
                     elif pygame.time.get_ticks() - self.start_time >= 5000:
                         # Now draw "AI chose this client" text AFTER the event section
-                        instruction = self.fonts['heading_font'].render("AI chose this client:", True, TEXT_COLOR)
+                        instruction = render_text_with_outline(
+                            self.fonts['heading_font'],
+                            "AI chose this client:", 
+                            TEXT_COLOR,
+                            (255, 255, 255), #outline
+                            2
+                            )
                         instruction_rect = instruction.get_rect(topleft=(50, event_panel.bottom + 20))  # Position after panel
                         self.screen.blit(instruction, instruction_rect)
                         for i, card in enumerate(self.client_cards):
@@ -693,7 +822,13 @@ class SoukKingGame:
                     # Show the sale price after a short delay
                     if pygame.time.get_ticks() - self.start_time >= 5000:
                         if self.bid_result == "ai" and self.chosen_client:
-                            sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
+                            sale_text = render_text_with_outline(
+                                self.fonts['heading_font'],
+                                f"Item Sold for: ${self.given_price:.2f}", 
+                                AI_COLOR,
+                                (255, 255, 255),  # white outline
+                                2  # outline thickness
+                            )
                             sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
                             self.screen.blit(sale_text, sale_rect)
                                 # Draw continue button
@@ -719,34 +854,77 @@ class SoukKingGame:
     def draw_results(self):
         # Draw background
         self.screen.fill(BACKGROUND)
+        self.screen.blit(self.images['background_img'], (0, 0))
         
         # Draw round and money info
-        round_text = self.fonts['heading_font'].render(f"Round {self.current_round} of 5", True, TEXT_COLOR)
+        round_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            f"Round {self.current_round} of 5", 
+            TEXT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         self.screen.blit(round_text, (20, 20))
         
-        # Animate money changes
+        # Animate money changes with outline
         if self.money_animation.running:
             progress = self.money_animation.update()
             display_money = self.old_user_money + (progress * (self.user_money - self.old_user_money))
-            player_money = self.fonts['regular_font'].render(f"Your Money: ${display_money:.2f}", True, PLAYER_COLOR)
+            player_money = render_text_with_outline(
+                self.fonts['regular_font'],
+                f"Your Money: ${display_money:.2f}", 
+                PLAYER_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
         else:
-            player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+            player_money = render_text_with_outline(
+                self.fonts['regular_font'],
+                f"Your Money: ${self.user_money:.2f}", 
+                PLAYER_COLOR,
+                (255, 255, 255),  # white outline
+                2  # outline thickness
+            )
         
-        ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
+        ai_money = render_text_with_outline(
+            self.fonts['regular_font'],
+            f"AI Money: ${self.ai_money:.2f}", 
+            AI_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         self.screen.blit(player_money, (20, 70))
         self.screen.blit(ai_money, (SCREEN_WIDTH - 250, 70))
         
         # Draw sale result
-        result_text = self.fonts['heading_font'].render(f"You sold the {self.current_product['name']} for ${self.given_price:.2f}", True, PLAYER_COLOR)
+        result_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            f"You sold the {self.current_product['name']} for ${self.given_price:.2f}", 
+            PLAYER_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         result_rect = result_text.get_rect(center=(SCREEN_WIDTH // 2, 150))
         self.screen.blit(result_text, result_rect)
         
         # Draw profit calculation
         profit = self.given_price - self.user_price
         if profit > 0:
-            profit_text = self.fonts['heading_font'].render(f"Profit: +${profit:.2f}", True, PLAYER_COLOR)
+            profit_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            f"Profit: +${profit:.2f}", 
+            PLAYER_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+            )
         else:
-            profit_text = self.fonts['heading_font'].render(f"Loss: -${-profit:.2f}", True, HIGHLIGHT_COLOR)
+            profit_text = render_text_with_outline(
+            self.fonts['heading_font'],
+            f"Loss: -${-profit:.2f}", 
+            HIGHLIGHT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+            )
         
         profit_rect = profit_text.get_rect(center=(SCREEN_WIDTH // 2, 200))
         self.screen.blit(profit_text, profit_rect)
@@ -881,9 +1059,16 @@ class SoukKingGame:
     def draw_rules(self):
         # Draw background
         self.screen.fill(BACKGROUND)
+        self.screen.blit(self.images['background_img'], (0, 0))
         
         # Draw title
-        title = self.fonts['title_font'].render("Game Rules", True, TEXT_COLOR)
+        title = render_text_with_outline(
+            self.fonts['title_font'],
+            "Game Rules", 
+            TEXT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
         title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 60))
         self.screen.blit(title, title_rect)
         
@@ -898,11 +1083,23 @@ class SoukKingGame:
                 
             # Use heading font for section titles
             if rule in ["Game Rules:", "Tips:"]:
-                text = self.fonts['heading_font'].render(rule, True, HIGHLIGHT_COLOR)
+                text = render_text_with_outline(
+                    self.fonts['heading_font'],
+                    rule, 
+                    HIGHLIGHT_COLOR,
+                    (255, 255, 255),  # white outline
+                    1  # outline thickness
+                )
             else:
-                text = self.fonts['regular_font'].render(rule, True, TEXT_COLOR)
+                text = render_text_with_outline(
+                    self.fonts['regular_font'],
+                    rule, 
+                    TEXT_COLOR,
+                    (255, 255, 255),  # white outline
+                    1  # outline thickness
+                )
                 
-            text_rect = text.get_rect(midleft=(SCREEN_WIDTH // 6, y_offset))
+            text_rect = text.get_rect(midleft=(SCREEN_WIDTH // 12, y_offset))
             self.screen.blit(text, text_rect)
             y_offset += line_height
         
