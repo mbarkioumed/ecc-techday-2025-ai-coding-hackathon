@@ -148,6 +148,25 @@ class SoukKingGame:
         # Set current product
         self.current_product = self.selected_products[self.current_round - 1]
         
+        if self.user_money < self.current_product['base_price'] and self.ai_money < self.current_product['base_price']:
+            # Find another product that at least one player can afford
+            affordable_product_found = False
+            
+            # Try the remaining products
+            for i in range(self.current_round, len(self.selected_products)):
+                potential_product = self.selected_products[i]
+                if self.user_money >= potential_product['base_price'] or self.ai_money >= potential_product['base_price']:
+                    # Swap the current product with this affordable one
+                    self.selected_products[self.current_round - 1], self.selected_products[i] = self.selected_products[i], self.selected_products[self.current_round - 1]
+                    self.current_product = self.selected_products[self.current_round - 1]
+                    affordable_product_found = True
+                    break
+                    
+            if not affordable_product_found:
+                # If no affordable products remain, end the game
+                self.transition_to_state(GameState.GAME_OVER)
+                return
+        
         # Reset bid input
         self.bid_input.text = str(self.current_product['base_price'])
         self.bid_input.txt_surface = self.bid_input.font.render(self.bid_input.text, True, TEXT_COLOR)
@@ -176,6 +195,12 @@ class SoukKingGame:
     
     def place_bid(self):
         try:
+            # Special case: If player can't afford base price, auto-bid 0
+            if self.user_money < self.current_product['base_price']:
+                self.user_price = 0
+                self.get_ai_bid()
+                return True
+            
             user_price = float(self.bid_input.text)
             
             # Validate bid
