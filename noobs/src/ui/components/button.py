@@ -5,7 +5,7 @@ from .animation import Animation
 
 class Button:
     """Button UI component with hover effects"""
-    def __init__(self, x, y, width, height, text, color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR, text_color=BUTTON_TEXT_COLOR, font=None, border_radius=10):
+    def __init__(self, x, y, width, height, text, color=BUTTON_COLOR, hover_color=BUTTON_HOVER_COLOR, text_color=BUTTON_TEXT_COLOR, font=None, border_radius=10, click_sound = None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.color = color
@@ -16,6 +16,7 @@ class Button:
         self.is_hovered = False
         self.animation = Animation(0.3)
         self.scale = 1.0
+        self.click_sound = click_sound
     
     def update(self, mouse_pos):
         self.is_hovered = self.rect.collidepoint(mouse_pos)
@@ -49,5 +50,8 @@ class Button:
     
     def is_clicked(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            return self.rect.collidepoint(event.pos)
+            if self.rect.collidepoint(event.pos):
+                if self.click_sound:
+                    self.click_sound.play()
+                return True
         return False

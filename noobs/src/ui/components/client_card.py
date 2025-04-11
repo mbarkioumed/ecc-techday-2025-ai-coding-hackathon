@@ -6,7 +6,7 @@ from .animation import Animation
 
 class ClientCard:
     """Client card UI component for displaying client information"""
-    def __init__(self, x, y, width, height, client, index, small_font=None):
+    def __init__(self, x, y, width, height, client, index, small_font=None, click_sound = None):
         self.rect = pygame.Rect(x, y, width, height)
         self.client = client
         self.index = index
@@ -17,7 +17,8 @@ class ClientCard:
             100, 
             40, 
             "Select", 
-            font=small_font
+            font=small_font,
+            click_sound = click_sound
         )
         self.selected = False
         self.animation = Animation(0.5)

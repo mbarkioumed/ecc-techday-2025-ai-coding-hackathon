@@ -52,7 +52,7 @@ def main():
     # Initialize pygame
     pygame.init()
     pygame.font.init()
-    pygame.mixer.init()
+    pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
     
     # Create screen
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
