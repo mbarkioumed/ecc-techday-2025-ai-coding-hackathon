@@ -440,45 +440,56 @@ class SoukKingGame:
         self.transition_to_state(GameState.RESULTS)
     
     def draw_menu(self):
-        # Set the window to a reasonable size that will show the full image with proper proportions
-        menu_width, menu_height = self.images['logo_img'].get_width(), self.images['logo_img'].get_height()
-        
-        # Resize the display for the menu only
-        if self.game_state == GameState.MENU:
-            pygame.display.set_mode((menu_width, menu_height))
-        
-        # Draw background
+        # Draw background - use the same background as rules screen
         self.screen.fill(BACKGROUND)
+        self.screen.blit(self.images['background_img'], (0, 0))
         
-        # Scale the logo image to fill the screen, maintaining aspect ratio
-        image_aspect_ratio = self.images['logo_img'].get_width() / self.images['logo_img'].get_height()
+        # Draw title
+        title = render_text_with_outline(
+            self.fonts['title_font'],
+            "SOUK KING", 
+            TEXT_COLOR,
+            (255, 255, 255),  # white outline
+            2  # outline thickness
+        )
+        title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, 60))
+        self.screen.blit(title, title_rect)
         
-        # Calculate background image size to cover the screen
-        if menu_width / menu_height > image_aspect_ratio:
-            # Screen is wider than image
-            bg_width = menu_width
-            bg_height = int(menu_width / image_aspect_ratio)
-        else:
-            # Screen is taller than image
-            bg_height = menu_height
-            bg_width = int(menu_height * image_aspect_ratio)
+        # Draw rules text - same as rules screen
+        y_offset = 120
+        line_height = 30
         
-        # Create a scaled version of the logo to use as background
-        bg_image = pygame.transform.smoothscale(self.images['logo_img'], (bg_width, bg_height))
+        for rule in self.rules:
+            if rule == "":  # Empty line for spacing
+                y_offset += line_height
+                continue
+                
+            # Use heading font for section titles
+            if rule in ["Game Rules:", "Tips:"]:
+                text = render_text_with_outline(
+                    self.fonts['heading_font'],
+                    rule, 
+                    HIGHLIGHT_COLOR,
+                    (255, 255, 255),  # white outline
+                    1  # outline thickness
+                )
+            else:
+                text = render_text_with_outline(
+                    self.fonts['regular_font'],
+                    rule, 
+                    TEXT_COLOR,
+                    (255, 255, 255),  # white outline
+                    1  # outline thickness
+                )
+                
+            text_rect = text.get_rect(midleft=(SCREEN_WIDTH // 12, y_offset))
+            self.screen.blit(text, text_rect)
+            y_offset += line_height
         
-        # Center the background image
-        bg_rect = bg_image.get_rect(center=(menu_width // 2, menu_height // 2))
-        self.screen.blit(bg_image, bg_rect)
-        
-        # Draw title at the top
-        subtitle = self.fonts['heading_font'].render("SOUK KING", True, (255, 0, 0))  # Red color
-        subtitle_rect = subtitle.get_rect(center=(menu_width // 2, 50))
-        self.screen.blit(subtitle, subtitle_rect)
-        
-        # Draw start button at the bottom center
-        self.start_button.rect.center = (menu_width // 2, menu_height - 80)
+        # Draw start button at the bottom - same position as the understood button
+        self.start_button.rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT - 80)
         self.start_button.draw(self.screen)
-    
+        
     def draw_bidding(self):
         # Draw background
         self.screen.fill(BACKGROUND)
@@ -1017,7 +1028,7 @@ class SoukKingGame:
     
     def draw_round_history(self):
         # Skip drawing history on menu and rules screens
-        if self.game_state in [GameState.MENU, GameState.RULES]:
+        if self.game_state == GameState.MENU:
             return
             
         # Draw 5 circles representing rounds
@@ -1110,8 +1121,6 @@ class SoukKingGame:
         # Draw current game state
         if self.game_state == GameState.MENU:
             self.draw_menu()
-        elif self.game_state == GameState.RULES:
-            self.draw_rules()
         elif self.game_state == GameState.BIDDING:
             self.draw_bidding()
         elif self.game_state == GameState.EVENT:
@@ -1132,8 +1141,6 @@ class SoukKingGame:
         # Update UI elements based on current state
         if self.game_state == GameState.MENU:
             self.start_button.update(mouse_pos)
-        elif self.game_state == GameState.RULES:
-            self.understood_button.update(mouse_pos)
         elif self.game_state == GameState.BIDDING:
             self.bid_input.update()
             self.place_bid_button.update(mouse_pos)
@@ -1161,10 +1168,7 @@ class SoukKingGame:
         
         if self.game_state == GameState.MENU:
             if self.start_button.is_clicked(event):
-                self.transition_to_state(GameState.RULES)  # Go to rules instead of next_round
-        elif self.game_state == GameState.RULES:
-            if self.understood_button.is_clicked(event):
-                self.next_round()  # Now proceed to first round after rules
+                self.next_round()  # Go directly to first round instead of rules
         elif self.game_state == GameState.BIDDING:
             # Handle bid input
             bid_result = self.bid_input.handle_event(event)
