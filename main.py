@@ -1,7 +1,5 @@
 import pygame
 import sys
-import math
-import time
 from pygame.locals import *
 from ui.constants import SCREEN_WIDTH, SCREEN_HEIGHT, init_fonts, GameState
 from game import SoukKingGame

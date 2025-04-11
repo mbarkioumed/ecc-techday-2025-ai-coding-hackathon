@@ -43,6 +43,7 @@ class SoukKingGame:
         self.given_price = 0
         self.client_cards = []
         self.winner = None
+        self.round_winners = [None, None, None, None, None]
         
         # Rules text
         self.rules = [
@@ -133,6 +134,7 @@ class SoukKingGame:
         self.selected_products = random.sample(products, 5)
         self.current_round = 0
         self.game_state = GameState.MENU
+        self.round_winners = [None, None, None, None, None]
     
     def next_round(self):
         # Advance to next round
@@ -252,12 +254,14 @@ class SoukKingGame:
         # Determine winner
         if self.user_price > self.ai_price:
             self.bid_result = "player"
+            self.round_winners[self.current_round - 1] = "player"
             self.old_user_money = self.user_money
             self.user_money -= self.user_price
             self.money_animation.start()
             self.handle_player_turn()
         else:
             self.bid_result = "ai"
+            self.round_winners[self.current_round - 1] = "ai"
             self.old_ai_money = self.ai_money
             self.ai_money -= self.ai_price
             self.money_animation.start()  
@@ -833,6 +837,47 @@ class SoukKingGame:
         transition_surface.fill((0, 0, 0, alpha))
         self.screen.blit(transition_surface, (0, 0))
     
+    def draw_round_history(self):
+        # Skip drawing history on menu and rules screens
+        if self.game_state in [GameState.MENU, GameState.RULES]:
+            return
+            
+        # Draw 5 circles representing rounds
+        circle_radius = 20
+        spacing = 15
+        total_width = (circle_radius * 2 * 5) + (spacing * 4)
+        start_x = (SCREEN_WIDTH - total_width) // 2
+        y = 20  # Position at the top
+        
+        for i in range(5):
+            x = start_x + (i * (circle_radius * 2 + spacing))
+            circle_pos = (x + circle_radius, y + circle_radius)
+            
+            # Highlight current round
+            if i + 1 == self.current_round:
+                pygame.draw.circle(self.screen, HIGHLIGHT_COLOR, circle_pos, circle_radius + 3, 2)
+            
+            # Draw circle border
+            pygame.draw.circle(self.screen, TEXT_COLOR, circle_pos, circle_radius, 2)
+            
+            # If this round has a winner, draw the corresponding image
+            if i < len(self.round_winners) and self.round_winners[i] is not None:
+                if self.round_winners[i] == "player":
+                    # Scale down the player image to fit in the circle
+                    scaled_img = pygame.transform.smoothscale(self.images['human_img'], (circle_radius*2-4, circle_radius*2-4))
+                    img_rect = scaled_img.get_rect(center=circle_pos)
+                    self.screen.blit(scaled_img, img_rect)
+                elif self.round_winners[i] == "ai":
+                    # Scale down the AI image to fit in the circle
+                    scaled_img = pygame.transform.smoothscale(self.images['robot_img'], (circle_radius*2-4, circle_radius*2-4))
+                    img_rect = scaled_img.get_rect(center=circle_pos)
+                    self.screen.blit(scaled_img, img_rect)
+            else:
+                # If no winner yet, just show the round number
+                round_num = self.fonts['small_font'].render(str(i + 1), True, TEXT_COLOR)
+                round_rect = round_num.get_rect(center=circle_pos)
+                self.screen.blit(round_num, round_rect)
+    
     def draw_rules(self):
         # Draw background
         self.screen.fill(BACKGROUND)
@@ -878,6 +923,8 @@ class SoukKingGame:
             self.draw_results()
         elif self.game_state == GameState.GAME_OVER:
             self.draw_game_over()
+            
+        self.draw_round_history()
         
         # Draw transition if active
         if self.transition_animation.running:
