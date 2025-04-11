@@ -1,8 +1,6 @@
 import random
-import time
 import ollama
 import pygame
-import math
 from pygame.locals import *
 from data import products, clients, events
 from functions import summarize_ai_memory, calculate_number_of_clients

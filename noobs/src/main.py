@@ -10,7 +10,7 @@ def load_game_images():
     
     try:
         # Logo image
-        logo_img = pygame.image.load("images/Souk king color.png")
+        logo_img = pygame.image.load("noobs/src/images/Souk king color.png")
         # Get original dimensions and calculate new size that preserves aspect ratio
         orig_width, orig_height = logo_img.get_size()
         target_width = 400
@@ -18,13 +18,13 @@ def load_game_images():
         images['logo_img'] = pygame.transform.smoothscale(logo_img, (target_width, target_height))
         
         # Player and AI images
-        images['human_img'] = pygame.image.load("images/human.png")
+        images['human_img'] = pygame.image.load("noobs/src/images/human.png")
         images['human_img'] = pygame.transform.scale(images['human_img'], (100, 100))
-        images['robot_img'] = pygame.image.load("images/robot.png")
+        images['robot_img'] = pygame.image.load("noobs/src/images/robot.png")
         images['robot_img'] = pygame.transform.scale(images['robot_img'], (100, 100))
         
         # Background image
-        bg_img = pygame.image.load("images/blurred_bg.jpg")
+        bg_img = pygame.image.load("noobs/src/images/blurred_bg.jpg")
         images['background_img'] = pygame.transform.scale(bg_img, (SCREEN_WIDTH, SCREEN_HEIGHT))
     except pygame.error:
         # Create placeholder images if files don't exist
