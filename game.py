@@ -157,6 +157,9 @@ class SoukKingGame:
         self.selected_clients = []
         self.client_cards = []
         
+        if hasattr(self, 'ai_sale_animation_started'):
+            delattr(self, 'ai_sale_animation_started')
+        
         # Start bidding phase
         self.transition_to_state(GameState.BIDDING)
     
@@ -257,7 +260,7 @@ class SoukKingGame:
             self.bid_result = "ai"
             self.old_ai_money = self.ai_money
             self.ai_money -= self.ai_price
-            self.money_animation.start()
+            self.money_animation.start()  
             self.handle_ai_turn()
         
         self.transition_to_state(GameState.EVENT)
@@ -323,7 +326,6 @@ class SoukKingGame:
                     self.chosen_client = self.selected_clients[0]
             except Exception:
                 self.chosen_client = self.selected_clients[0]
-        
         # Calculate sale price
         today_price = self.ai_price
         if self.selected_event['name'] == "High demand day":
@@ -331,12 +333,15 @@ class SoukKingGame:
         elif self.selected_event['name'] == "Low demand day":
             today_price /= 2
         
+        # Calculate the price but don't add it yet
         self.given_price = self.chosen_client['offer_percentage'] * today_price
-        self.old_ai_money = self.ai_money
-        self.ai_money += self.given_price
         
+        # Store the final amount AI will have, but don't apply it yet
+        self.final_ai_money = self.ai_money + self.given_price
         if self.selected_event['name'] == "Charity day":
-            self.ai_money -= self.ai_money * 0.2
+            self.final_ai_money -= self.final_ai_money * 0.2
+        
+        # Don't update self.ai_money yet - keep it at the post-bid value
         
         # Update AI memory
         self.ai_memory.append({
@@ -528,9 +533,42 @@ class SoukKingGame:
         # Draw background
         self.screen.fill(BACKGROUND)
         
-        # Draw round and money info
+        # Draw round info
         round_text = self.fonts['heading_font'].render(f"Round {self.current_round} of 5", True, TEXT_COLOR)
         self.screen.blit(round_text, (20, 20))
+        
+        # Money display logic with animations
+        if hasattr(self, 'ai_sale_animation') and self.ai_sale_animation.running:
+            # If AI sale animation is running, use that for AI money display
+            progress = self.ai_sale_animation.update()
+            display_ai_money = self.old_ai_money + (progress * (self.final_ai_money - self.old_ai_money))
+            ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
+            player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+            
+            # When sale animation is complete, update the actual AI money
+            if not self.ai_sale_animation.running:
+                self.ai_money = self.final_ai_money
+        elif self.money_animation.running:
+            # Initial bid animation
+            progress = self.money_animation.update()
+            if self.bid_result == "player":
+                display_money = self.old_user_money - (progress * (self.old_user_money - self.user_money))
+                player_money = self.fonts['regular_font'].render(f"Your Money: ${display_money:.2f}", True, PLAYER_COLOR)
+            else:
+                player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+            
+            if self.bid_result == "ai":
+                display_ai_money = self.old_ai_money - (progress * (self.old_ai_money - self.ai_money))
+                ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
+            else:
+                ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
+        else:
+            player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
+            ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
+        
+        # Always display money at the top
+        self.screen.blit(player_money, (20, 70))
+        self.screen.blit(ai_money, (SCREEN_WIDTH - 250, 70))
         
         if pygame.time.get_ticks() - self.start_time < 2000:
             # Display user and AI logos
@@ -558,27 +596,6 @@ class SoukKingGame:
             self.screen.blit(winner_text, winner_rect)
         
         if pygame.time.get_ticks() - self.start_time >= 2000:
-            # Animate money changes
-            if self.money_animation.running:
-                progress = self.money_animation.update()
-                if self.bid_result == "player":
-                    display_money = self.old_user_money - (progress * (self.old_user_money - self.user_money))
-                    player_money = self.fonts['regular_font'].render(f"Your Money: ${display_money:.2f}", True, PLAYER_COLOR)
-                else:
-                    player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
-                
-                if self.bid_result == "ai":
-                    display_ai_money = self.old_ai_money - (progress * (self.old_ai_money - self.ai_money))
-                    ai_money = self.fonts['regular_font'].render(f"AI Money: ${display_ai_money:.2f}", True, AI_COLOR)
-                else:
-                    ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
-            else:
-                player_money = self.fonts['regular_font'].render(f"Your Money: ${self.user_money:.2f}", True, PLAYER_COLOR)
-                ai_money = self.fonts['regular_font'].render(f"AI Money: ${self.ai_money:.2f}", True, AI_COLOR)
-            
-            self.screen.blit(player_money, (20, 70))
-            self.screen.blit(ai_money, (SCREEN_WIDTH - 250, 70))
-            
             # Draw bid result left-aligned instead of centered - MOVED DOWN BY 10 PIXELS
             if self.bid_result == "player":
                 result_text = self.fonts['heading_font'].render(f"You bought the {self.current_product['name']} for ${self.user_price:.2f}", True, PLAYER_COLOR)
@@ -660,12 +677,6 @@ class SoukKingGame:
                                 overlay_alpha = int(180 * fade_progress)  # Gradually increase opacity to 70%
                                 overlay.fill((BACKGROUND[0], BACKGROUND[1], BACKGROUND[2], overlay_alpha))
                                 self.screen.blit(overlay, card_rect)
-                        
-                        # Show the sale price after a short delay
-                        if pygame.time.get_ticks() - self.start_time >= 5000:
-                            sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
-                            sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
-                            self.screen.blit(sale_text, sale_rect)
                     elif pygame.time.get_ticks() - self.start_time >= 5000:
                         # Now draw "AI chose this client" text AFTER the event section
                         instruction = self.fonts['heading_font'].render("AI chose this client:", True, TEXT_COLOR)
@@ -675,15 +686,22 @@ class SoukKingGame:
                             if self.chosen_client == card.client:
                                 card.selected = True
                                 card.draw(self.screen)
-                        
-                    
+                    # Show the sale price after a short delay
                     if pygame.time.get_ticks() - self.start_time >= 5000:
-                        sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
-                        sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
-                        self.screen.blit(sale_text, sale_rect)
-                    
-                    # Draw continue button
-                    self.continue_button.draw(self.screen)
+                        if self.bid_result == "ai" and self.chosen_client:
+                            sale_text = self.fonts['heading_font'].render(f"Item Sold for: ${self.given_price:.2f}", True, AI_COLOR)
+                            sale_rect = sale_text.get_rect(center=(SCREEN_WIDTH // 2, 700))
+                            self.screen.blit(sale_text, sale_rect)
+                                # Draw continue button
+                            if pygame.time.get_ticks() - self.start_time >= 5100:    
+                                self.continue_button.draw(self.screen)
+                        
+                        # Start the money animation for adding the sale price to AI money
+                        if hasattr(self, 'final_ai_money') and not hasattr(self, 'ai_sale_animation_started'):
+                            self.old_ai_money = self.ai_money  # Current money (after bid subtracted)
+                            self.ai_sale_animation = Animation(1.0)
+                            self.ai_sale_animation.start()
+                            self.ai_sale_animation_started = True
                 else:
                     # AI is still choosing
                     instruction = self.fonts['heading_font'].render("AI is choosing a client...", True, TEXT_COLOR)
@@ -755,10 +773,6 @@ class SoukKingGame:
             text_surf = self.fonts['small_font'].render(line, True, TEXT_COLOR)
             self.screen.blit(text_surf, (client_panel.x + 20, client_panel.y + y_offset))
             y_offset += 25
-        
-        # Draw offer percentage
-        offer_text = self.fonts['regular_font'].render(f"Offer percentage: {self.chosen_client['offer_percentage']}", True, TEXT_COLOR)
-        self.screen.blit(offer_text, (client_panel.x + 20, client_panel.y + 150))
         
         # Draw continue button
         self.continue_button.draw(self.screen)
@@ -879,6 +893,7 @@ class SoukKingGame:
         elif self.game_state == GameState.BIDDING:
             self.bid_input.update()
             self.place_bid_button.update(mouse_pos)
+            #self.ai_sale_animation_started = False
             self.showed_view = False
         elif self.game_state == GameState.EVENT:
             if self.showed_view == False:
