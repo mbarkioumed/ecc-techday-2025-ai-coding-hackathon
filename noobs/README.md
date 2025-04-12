@@ -1,3 +1,6 @@
+PS : the demo provided contains some lag because the computer we were running it on was slow and didnt have a gpu which is necessary for the model to run on.
+
+
 # Souk King
 
 Souk King is a simple marketplace simulation game built with Pygame. Players compete against an AI merchant (powered by a local Ollama instance) in a Moroccan souk setting. The goal is to buy products through bidding and sell them to clients for the highest profit over 5 rounds.
